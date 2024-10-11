@@ -27,14 +27,14 @@ export default {
   },
 
   created() {
-    this.directionsRenderer = null;
+    this.item = null;
     this.directionsService = null;
   },
 
   mounted() {
     const { DirectionsRenderer } = this.google.maps;
 
-    this.directionsRenderer = new DirectionsRenderer({
+    this.item = new DirectionsRenderer({
       map: this.map,
       ...this.options,
     });
@@ -81,8 +81,8 @@ export default {
   },
 
   beforeUnmount() {
-    if (this.directionsRenderer) {
-      this.directionsRenderer.setMap(null);
+    if (this.item) {
+      this.item.setMap(null);
     }
   },
 
@@ -102,11 +102,11 @@ export default {
      * @param newValue
      */
     calculatedDirections(newValue) {
-      if (!newValue || !this.directionsRenderer) {
+      if (!newValue || !this.item) {
         return;
       }
 
-      this.directionsRenderer.setDirections(newValue);
+      this.item.setDirections(newValue);
     },
 
     /**
