@@ -5,7 +5,7 @@
       :api-key="apiKey"
       :options="mapOptions"
     >
-      <!-- Map Direction need valid API Key -->
+      <!-- Map Direction needs a valid API Key -->
       <map-direction
         v-if="origin && destination"
         :options="{
