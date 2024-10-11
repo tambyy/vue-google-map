@@ -1,58 +1,137 @@
 <template>
-  <div class="hello">
-    <h1>{{ msg }}</h1>
-    <p>
-      For a guide and recipes on how to configure / customize this project,<br>
-      check out the
-      <a href="https://cli.vuejs.org" target="_blank" rel="noopener">vue-cli documentation</a>.
-    </p>
-    <h3>Installed CLI Plugins</h3>
-    <ul>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-babel" target="_blank" rel="noopener">babel</a></li>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-eslint" target="_blank" rel="noopener">eslint</a></li>
-    </ul>
-    <h3>Essential Links</h3>
-    <ul>
-      <li><a href="https://vuejs.org" target="_blank" rel="noopener">Core Docs</a></li>
-      <li><a href="https://forum.vuejs.org" target="_blank" rel="noopener">Forum</a></li>
-      <li><a href="https://chat.vuejs.org" target="_blank" rel="noopener">Community Chat</a></li>
-      <li><a href="https://twitter.com/vuejs" target="_blank" rel="noopener">Twitter</a></li>
-      <li><a href="https://news.vuejs.org" target="_blank" rel="noopener">News</a></li>
-    </ul>
-    <h3>Ecosystem</h3>
-    <ul>
-      <li><a href="https://router.vuejs.org" target="_blank" rel="noopener">vue-router</a></li>
-      <li><a href="https://vuex.vuejs.org" target="_blank" rel="noopener">vuex</a></li>
-      <li><a href="https://github.com/vuejs/vue-devtools#vue-devtools" target="_blank" rel="noopener">vue-devtools</a></li>
-      <li><a href="https://vue-loader.vuejs.org" target="_blank" rel="noopener">vue-loader</a></li>
-      <li><a href="https://github.com/vuejs/awesome-vue" target="_blank" rel="noopener">awesome-vue</a></li>
-    </ul>
+  <div style="width: 100%; height: 600px">
+    <google-map
+      style="width: 100%; height: 100%"
+      :api-key="apiKey"
+      :options="mapOptions"
+    >
+      <!-- Map Direction need valid API Key -->
+      <map-direction
+        v-if="origin && destination"
+        :options="{
+          origin: origin,
+          destination: destination,
+          waypoints: waypoints,
+          polylineOptions: { strokeColor: '#FF000055' },
+          suppressMarkers: true,
+        }"
+      />
+
+      <map-marker
+        v-for="marker in markers"
+        :key="marker.id"
+        :options="{
+          position: { lat: marker.lat, lng: marker.lng },
+        }"
+        @click="
+          (e, m) => {
+            selectedMarker = m;
+            infoWindowContent = getMarkerInfoWindowContent(marker);
+          }
+        "
+      />
+
+      <map-circle
+        :options="{
+          center: { lat: 50.1773063, lng: 3.2337914 },
+          radius: 60000,
+          ...circleOptions,
+        }"
+      />
+
+      <map-info-window
+        :options="infoWindowOptions"
+        :marker="selectedMarker"
+        @closeclick="selectedMarker = null"
+      />
+    </google-map>
   </div>
 </template>
 
 <script>
-export default {
-  name: 'HelloWorld',
-  props: {
-    msg: String
-  }
-}
-</script>
+import GoogleMap from "./google/map/Map.vue";
+import MapMarker from "./google/map/Marker.vue";
+import MapCircle from "./google/map/Circle.vue";
+import MapDirection from "./google/map/Direction.vue";
+import MapInfoWindow from "./google/map/InfoWindow.vue";
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-h3 {
-  margin: 40px 0 0;
-}
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-a {
-  color: #42b983;
-}
-</style>
+import { apiKey, mapOptions, circleOptions } from "@/constants/mapSettings";
+
+export default {
+  name: "HelloWorld",
+
+  components: {
+    GoogleMap,
+    MapMarker,
+    MapCircle,
+    MapDirection,
+    MapInfoWindow,
+  },
+
+  data() {
+    return {
+      // You must define your own Google Map API Key
+      apiKey,
+      mapOptions,
+      circleOptions,
+      selectedMarker: null,
+      infoWindowContent: "",
+      markers: [
+        { id: 1, name: "A", lat: 50.1773063, lng: 3.2337914 },
+        { id: 2, name: "B", lat: 49.848598, lng: 3.2864 },
+        { id: 3, name: "C", lat: 49.849998, lng: 2.66667 },
+      ],
+    };
+  },
+
+  methods: {
+    getMarkerInfoWindowContent(marker) {
+      return marker.name;
+    },
+  },
+
+  computed: {
+    // Direction
+    origin() {
+      if (this.markers.length < 2) {
+        return null;
+      }
+
+      const { lat, lng } = this.markers[0];
+
+      return { lat, lng };
+    },
+
+    destination() {
+      if (this.markers.length < 2) {
+        return null;
+      }
+
+      const { lat, lng } = this.markers[this.markers.length - 1];
+
+      return { lat, lng };
+    },
+
+    waypoints() {
+      if (this.markers.length < 2) {
+        return null;
+      }
+
+      return this.markers
+        .slice(1, this.markers.length - 1)
+        .map(({ lat, lng }) => ({
+          location: { lat, lng },
+          stopover: true,
+        }));
+    },
+
+    // Info window
+
+    infoWindowOptions() {
+      return {
+        content: this.infoWindowContent,
+      };
+    },
+  },
+};
+</script>
