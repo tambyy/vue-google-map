@@ -3,8 +3,15 @@
     <google-map
       style="width: 100%; height: 100%"
       :api-key="apiKey"
-      :options="mapOptions"
+      :options="{
+        ...mapOptions,
+      }"
+      @map-mousedown="beginDrawCircle"
+      @map-mousemove="drawCircle"
+      @map-mouseup="endDrawCircle"
     >
+      <map-circle :options="circleFullOptions" />
+
       <!-- Map Direction needs a valid API Key -->
       <map-direction
         v-if="origin && destination"
@@ -29,14 +36,6 @@
             infoWindowContent = getMarkerInfoWindowContent(marker);
           }
         "
-      />
-
-      <map-circle
-        :options="{
-          center: { lat: 50.1773063, lng: 3.2337914 },
-          radius: 60000,
-          ...circleOptions,
-        }"
       />
 
       <map-info-window
@@ -73,7 +72,6 @@ export default {
       // You must define your own Google Map API Key
       apiKey,
       mapOptions,
-      circleOptions,
       selectedMarker: null,
       infoWindowContent: "",
       markers: [
@@ -81,6 +79,11 @@ export default {
         { id: 2, name: "B", lat: 49.848598, lng: 3.2864 },
         { id: 3, name: "C", lat: 49.849998, lng: 2.66667 },
       ],
+      circle: {
+        drawing: false,
+        center: { lat: 50.1773063, lng: 3.2337914 },
+        radius: 60000,
+      },
     };
   },
 
@@ -88,10 +91,72 @@ export default {
     getMarkerInfoWindowContent(marker) {
       return marker.name;
     },
+
+    // Circle drawing example
+
+    /**
+     * When CTRL + mousedown on the map
+     * Begin drawing circle
+     */
+    beginDrawCircle(event, map) {
+      if (!event.domEvent.ctrlKey) {
+        return;
+      }
+
+      map.setOptions({ draggable: false });
+
+      this.circle = {
+        drawing: true,
+        center: event.latLng,
+        radius: 0,
+      };
+    },
+
+    /**
+     * Draw the circle
+     * when moving the mouse
+     */
+    drawCircle(event, map, google) {
+      if (!this.circle.drawing) {
+        return;
+      }
+
+      // Calculate the radius of the circle
+      // (Distance between LatLng A and LatLng B)
+      const radius = google.maps.geometry.spherical.computeDistanceBetween(
+        this.circle.center,
+        event.latLng
+      );
+
+      this.circle = {
+        ...this.circle,
+        radius,
+      };
+    },
+
+    /**
+     * When mouseup on the map
+     * End drawing circle
+     */
+    endDrawCircle(event, map) {
+      if (!this.circle.drawing) {
+        return;
+      }
+
+      this.circle = {
+        drawing: false,
+      };
+
+      map.setOptions({ draggable: true });
+    },
   },
 
   computed: {
     // Direction
+
+    /**
+     * Origin of the directions
+     */
     origin() {
       if (this.markers.length < 2) {
         return null;
@@ -102,6 +167,9 @@ export default {
       return { lat, lng };
     },
 
+    /**
+     * Destination of the directions
+     */
     destination() {
       if (this.markers.length < 2) {
         return null;
@@ -112,6 +180,9 @@ export default {
       return { lat, lng };
     },
 
+    /**
+     * Waypoints of the directions
+     */
     waypoints() {
       if (this.markers.length < 2) {
         return null;
@@ -127,9 +198,24 @@ export default {
 
     // Info window
 
+    /**
+     * Info window options
+     */
     infoWindowOptions() {
       return {
         content: this.infoWindowContent,
+      };
+    },
+
+    // Circle
+
+    /**
+     * Full circle for the drawn circle
+     */
+    circleFullOptions() {
+      return {
+        ...this.circle,
+        ...circleOptions,
       };
     },
   },

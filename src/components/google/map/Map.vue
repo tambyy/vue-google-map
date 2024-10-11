@@ -55,7 +55,7 @@ export default {
     addListeners() {
       this.events.forEach((e) => {
         this.map.addListener(e, (event) => {
-          this.$emit(e, event, this.map);
+          this.$emit("map-" + e, event, this.map, this.google);
         });
       });
     },
