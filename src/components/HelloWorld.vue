@@ -13,12 +13,16 @@
       <map-circle :options="circleFullOptions" />
 
       <!-- Map Direction needs a valid API Key -->
-      <map-direction
+      <map-directions-service
         v-if="origin && destination"
+        :options="directionsServiceOptions"
+        @directions-loaded="(d) => (directions = d)"
+      />
+
+      <map-directions-renderer
+        v-if="directions"
         :options="{
-          origin: origin,
-          destination: destination,
-          waypoints: waypoints,
+          directions: directions,
           polylineOptions: { strokeColor: '#FF000055' },
           suppressMarkers: true,
         }"
@@ -51,7 +55,8 @@
 import GoogleMap from "./google/map/Map.vue";
 import MapMarker from "./google/map/Marker.vue";
 import MapCircle from "./google/map/Circle.vue";
-import MapDirection from "./google/map/Direction.vue";
+import MapDirectionsService from "./google/map/DirectionsService.vue";
+import MapDirectionsRenderer from "./google/map/DirectionsRenderer.vue";
 import MapInfoWindow from "./google/map/InfoWindow.vue";
 
 import { apiKey, mapOptions, circleOptions } from "@/constants/mapSettings";
@@ -63,7 +68,8 @@ export default {
     GoogleMap,
     MapMarker,
     MapCircle,
-    MapDirection,
+    MapDirectionsService,
+    MapDirectionsRenderer,
     MapInfoWindow,
   },
 
@@ -79,6 +85,7 @@ export default {
         { id: 2, name: "B", lat: 49.848598, lng: 3.2864 },
         { id: 3, name: "C", lat: 49.849998, lng: 2.66667 },
       ],
+      directions: null,
       circle: {
         drawing: false,
         center: { lat: 50.1773063, lng: 3.2337914 },
@@ -194,6 +201,15 @@ export default {
           location: { lat, lng },
           stopover: true,
         }));
+    },
+
+    directionsServiceOptions() {
+      return {
+        origin: this.origin,
+        destination: this.destination,
+        waypoints: this.waypoints,
+        travelMode: "DRIVING",
+      };
     },
 
     // Info window

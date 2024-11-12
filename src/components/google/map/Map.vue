@@ -24,15 +24,16 @@ export default {
     };
   },
 
+  /**
+   * Add the map and google object
+   * to the component context
+   * so these can be injected into the child component
+   */
   provide() {
     return {
       google: computed(() => this.google),
       map: computed(() => this.map),
     };
-  },
-
-  created() {
-    this.marker = null;
   },
 
   async mounted() {
@@ -48,10 +49,19 @@ export default {
   },
 
   methods: {
+    /**
+     * Map initialization
+     */
     initializeMap() {
       const mapContainer = this.$refs.googleMap;
       this.map = new this.google.maps.Map(mapContainer, this.options);
     },
+
+    /**
+     * Listen to all events
+     * starting with 'map-'
+     * added to the component
+     */
     addListeners() {
       this.events.forEach((e) => {
         this.map.addListener(e, (event) => {
@@ -59,6 +69,11 @@ export default {
         });
       });
     },
+
+    /**
+     * Remove event listeners
+     * before unmount
+     */
     removeListeners() {
       this.events.forEach((e) => {
         this.map.clearListeners(e);
@@ -68,7 +83,7 @@ export default {
 
   beforeUnmount() {
     if (this.map) {
-      this.removeListeners();
+      // this.removeListeners();
     }
   },
 
@@ -79,6 +94,11 @@ export default {
   },
 
   computed: {
+    /**
+     * Get all '@map-...'
+     * event listener
+     * from the component
+     */
     events() {
       return Object.keys(this.$attrs)
         .filter((attrName) => attrName.startsWith("onMap"))

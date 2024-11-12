@@ -24,10 +24,6 @@ export default {
   },
 
   created() {
-    this.item = null;
-  },
-
-  mounted() {
     const component = this.google.maps[this.component];
 
     this.item = new component({

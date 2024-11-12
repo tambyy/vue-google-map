@@ -23,10 +23,6 @@ export default {
   },
 
   created() {
-    this.item = null;
-  },
-
-  mounted() {
     const { InfoWindow } = this.google.maps;
     this.item = new InfoWindow(this.options);
 
